@@ -1,4 +1,5 @@
 .idea/
 *.csv
 main/main
+main/soscraper
 *.zip

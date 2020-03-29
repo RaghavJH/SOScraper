@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 /* User struct */
@@ -38,6 +39,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to set parallelism options: %s", err)
 	}
+	//Record time start
+	t1 := time.Now()
 	/* Now we get the number of pages of users */
 	fmt.Println("Scraping max pages...")
 	maxPages, err := GetMaxPages(c)
@@ -59,6 +62,9 @@ func main() {
 		log.Fatalf("Error creating CSV file: %s", err)
 	}
 	fmt.Println("Finished writing to CSV")
+	diff := time.Now().Sub(t1)
+	fmt.Printf("Finished collection in %s\n", diff)
+
 }
 
 func WriteToCSV(users []*User, filepath string) (err error) {
@@ -73,11 +79,13 @@ func WriteToCSV(users []*User, filepath string) (err error) {
 	}
 	/* Write data points to table */
 	for i, user := range users {
-		toWrite := fmt.Sprintf(
-			"%d,\"%s\",\"%s\",%d,\"%s\",\"%s\",\"%s\"\n",
-			i+1, user.Name, user.Location, user.Reputation, user.Skills[0], user.Skills[1], user.Skills[2],
+		_, err = f.WriteString(
+			fmt.Sprintf(
+				"%d,\"%s\",\"%s\",%d,\"%s\",\"%s\",\"%s\"\n",
+				i+1, user.Name, user.Location, user.Reputation, user.Skills[0], user.Skills[1], user.Skills[2],
+			),
 		)
-		if _, err = f.WriteString(toWrite); err != nil {
+		if err != nil {
 			f.Close()
 			return
 		}
