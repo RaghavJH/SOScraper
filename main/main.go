@@ -91,7 +91,7 @@ func WriteToCSV(users []*User, filepath string) (err error) {
 func ScrapeUsers(c *colly.Collector, maxPages int64) (users []*User, err error) {
 	//Scrape maximum 1 million users, minimum whatever the minimum is
 	//36 users per page
-	maxPages = int64(math.Min(float64(maxPages), 1000000/36))
+	maxPages = int64(math.Min(float64(maxPages), math.Ceil(1000000/36.0)))
 	users = make([]*User, 0, maxPages*36)
 	//Mutex for safely appending to users array
 	var mux sync.Mutex
@@ -149,7 +149,7 @@ func ScrapeUsers(c *colly.Collector, maxPages int64) (users []*User, err error) 
 		//Safely print
 		muxPrint.Lock()
 		scraped += 1
-		fmt.Printf("Scraped %d\n", scraped)
+		fmt.Printf("Scraped %d users\n", scraped)
 		muxPrint.Unlock()
 	})
 
