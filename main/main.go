@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -88,10 +89,15 @@ func WriteToCSV(users []*User, filepath string) (err error) {
 }
 
 func ScrapeUsers(c *colly.Collector, maxPages int64) (users []*User, err error) {
-	//~36 users per page
+	//Scrape maximum 1 million users, minimum whatever the minimum is
+	//36 users per page
+	maxPages = int64(math.Min(float64(maxPages), 1000000/36))
 	users = make([]*User, 0, maxPages*36)
 	//Mutex for safely appending to users array
 	var mux sync.Mutex
+	//Printing to track progress
+	var muxPrint sync.Mutex
+	scraped := int64(0)
 
 	c.OnHTML(".user-info", func(e *colly.HTMLElement) {
 		user := &User{}
@@ -140,6 +146,11 @@ func ScrapeUsers(c *colly.Collector, maxPages int64) (users []*User, err error) 
 		mux.Lock()
 		users = append(users, user)
 		mux.Unlock()
+		//Safely print
+		muxPrint.Lock()
+		scraped += 1
+		fmt.Printf("Scraped %d\n", scraped)
+		muxPrint.Unlock()
 	})
 
 	//Scrape each page in its own Goroutine (max 50 at a time as set in main func)
